@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+	<head>
+		<title>Тестовое задание</title>
+		<meta charset="utf-8" />
+		<script src="{% static "js/jquery-3.7.1.min.js" %}"></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<h2>Форма</h2>
+		<form action="{{ quote.id }}" method="POST" id="editform">
+			{% csrf_token %}
+			<input name="id" type="number" value="{{  quote.id }}" id="id" hidden />
+			<p>Цитата:<br> <textarea name="name" id="name">{{  quote.name }}</textarea></p>
+			<p>Источник:<br> <input name="source" value="{{  quote.source }}" id="source"/></p>
+			<p>Вес:<br> <input name="weight" type="number" value="{{ quote.weight}}" id="weight"/></p>
+			<input type="submit" value="Изменить" />
+		</form>
+		<a href="/form">Назад</a>
+		<script>
+			const editForm = document.getElementById("editform");
+			editForm.addEventListener('submit', function(event) {
+				event.preventDefault();
+				const csrftoken = jQuery('[name=csrfmiddlewaretoken]').val();
+				const data = {
+					name: $("#name").val(),
+					source: $("#source").val(),
+					weight: $("#weight").val(),
+				};
+				edit_id = $("#id").val();
+				$.ajax({
+					url: `${edit_id}`,
+					type: "POST",
+					data: data,
+					headers: {
+						'X-CSRFToken': csrftoken
+					},
+					success: function(data) {
+						$("#name").val(data['name']);
+						$("#source").val(data['source']);
+						$("#weight").val(data['weight']);
+						alert("Успешно изменено");
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

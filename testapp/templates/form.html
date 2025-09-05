@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+	<head>
+		<title>Тестовое задание</title>
+		<meta charset="utf-8" />
+		<script src="{% static "js/jquery-3.7.1.min.js" %}"></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<nav>
+			<a href="/">Случайная цитата</a>
+			<a href="/form">Редактировать</a>
+			<a href="/dashboard">Статистика</a>
+		</nav>
+		<h2>Цитаты</h2>
+		<table id="table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Цитата</th>
+					<th>Источник</th>
+					<th>Вес</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody id="quotes">
+				{% for quote in quotes %}
+					<tr>
+						<td>{{ quote.id }}</td>
+						<td>{{ quote.name }}</td>
+						<td>{{ quote.source }}</td>
+						<td>{{ quote.weight }}</td>
+						<td><form action="edit/{{ quote.id }}"><input type="submit" value="Изменить" /></form></td>
+						<td><button onclick="delete_quote({{ quote.id }})">Удалить</button></td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		<h2>Форма</h2>
+		<form action="postquote" method="POST" id="quoteform">
+			{% csrf_token %}
+			<p>Цитата:<br> <textarea name="name" id="name"></textarea></p>
+			<p>Источник:<br> <input name="source" id="source" /></p>
+			<p>Вес:<br> <input name="weight" type="number" id="weight" /></p>
+			<input type="submit" value="Добавить" />
+		</form>
+		<script>
+			function onSuccess(data) {
+				if (typeof data['error'] !== "undefined") {
+					alert(data['error']);
+				}
+				else {
+					table = document.getElementById("table");
+					body = document.createElement("tbody");
+					body.id = "quotes";
+					data_array = JSON.parse(data);
+					data_array.forEach((elem) => {
+						data_row = document.createElement("tr");
+						data_row_id = document.createElement("td");
+						data_row_id.innerHTML = elem['id'];
+						data_row.appendChild(data_row_id);
+						data_row_name = document.createElement("td");
+						data_row_name.innerHTML = elem['name'];
+						data_row.appendChild(data_row_name);
+						data_row_s = document.createElement("td");
+						data_row_s.innerHTML = elem['source'];
+						data_row.appendChild(data_row_s);
+						data_row_w = document.createElement("td");
+						data_row_w.innerHTML = elem['weight'];
+						data_row.appendChild(data_row_w);
+						data_row_e = document.createElement("td");
+						edit_form = document.createElement("form");
+						edit_form.setAttribute("action", `edit/${elem['id']}`);
+						edit_form_input = document.createElement("input");
+						edit_form_input.setAttribute("type", "submit");
+						edit_form_input.setAttribute("value", "Изменить");
+						edit_form.appendChild(edit_form_input);
+						data_row_e.appendChild(edit_form);
+						data_row.appendChild(data_row_e);
+						data_row_d = document.createElement("td");
+						del_button = document.createElement("button");
+						del_button.setAttribute("onclick", `delete_quote(${elem['id']})`);
+						del_button.innerHTML = "Удалить";
+						data_row_d.appendChild(del_button);
+						data_row.appendChild(data_row_d);
+						body.appendChild(data_row);
+					});
+					old_body = document.getElementById("quotes");
+					old_body.remove();
+					table.appendChild(body);
+				}
+			}
+			
+			function delete_quote(id) {
+				const csrftoken = jQuery('[name=csrfmiddlewaretoken]').val();
+				$.ajax({
+					url: `delete/${id}`,
+					headers: {
+						'X-CSRFToken': csrftoken
+					},
+					success: onSuccess
+				});
+			}
+			
+			const quoteForm = document.getElementById("quoteform");
+			quoteForm.addEventListener('submit', function(event) {
+				event.preventDefault();
+				const csrftoken = jQuery('[name=csrfmiddlewaretoken]').val();
+				const data = {
+					name: $("#name").val(),
+					source: $("#source").val(),
+					weight: $("#weight").val(),
+				};
+				$.ajax({
+					url: "postquote",
+					type: "POST",
+					data: data,
+					headers: {
+						'X-CSRFToken': csrftoken
+					},
+					success: onSuccess
+				});
+			});
+			
+		</script>
+	</body>
+</html>

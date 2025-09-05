@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+	<head>
+		<title>Тестовое задание</title>
+		<meta charset="utf-8" />
+		<script src="{% static "js/jquery-3.7.1.min.js" %}"></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<nav>
+			<a href="/">Случайная цитата</a>
+			<a href="/form">Редактировать</a>
+			<a href="/dashboard">Статистика</a>
+		</nav>
+		<p id="quote_name" style="font-size: 48px">{{ quote.name }}</p>
+		<p id="quote_source" style="font-style: italic">{{ quote.source }}</p>
+		<div id="quote">
+		<p>Лайков: {{  quote.likes }}</p>
+		<p>Дизлайков: {{ quote.dislikes }}</p>
+		<p>Просмотров: {{ quote.views }}</p>
+		</div>
+		{% csrf_token %}
+		<button onclick="setRate('like')">Нравится</button>
+		<button onclick="setRate('dislike')">Не нравится</button>
+		<script>
+			function setRate(rate) {
+				const csrftoken = jQuery('[name=csrfmiddlewaretoken]').val();
+				const data = {
+					quote: {{ quote.id }},
+					mark: rate
+				};
+				$.ajax({
+					url: "rate",
+					type: "POST",
+					data: data,
+					headers: {
+						'X-CSRFToken': csrftoken
+					},
+					success: function(data) {
+						p_l = document.createElement("p");
+						p_l.innerHTML = `Лайков: ${data['likes']}`;
+						p_d = document.createElement("p");
+						p_d.innerHTML = `Дизлайков: ${data['dislikes']}`;
+						p_v = document.createElement("p");
+						p_v.innerHTML = `Просмотров: ${data['views']}`;
+						main = document.getElementById("quote");
+						main.innerHTML = "";
+						main.appendChild(p_l);
+						main.appendChild(p_d);
+						main.appendChild(p_v);
+					}
+				});
+			}
+		</script>
+	</body>
+</html>
