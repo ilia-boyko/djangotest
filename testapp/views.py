@@ -6,41 +6,30 @@ from .models import Quotes
 import random
 import json
 
-def add_quotes():
-    quotes = Quotes.objects.bulk_create([
-        Quotes(name="Цитата из Книги 1", source="Книга 1"),
-        Quotes(name="Цитата из Фильма 1", source="Фильм 1"),
-        Quotes(name="Цитата из Книги 2", source="Книга 2"),
-    ])
-
-def del_quotes():
-    Quotes.objects.all().delete()
-
 def index(request):
-    #add_quotes()
-    #del_quotes()
     result = Quotes.objects.all()
     count = len(result)
-    if count > 0 :
+    if count > 0:
         total = 0
         for line in result:
             total += line.weight
         number = random.randint(1, total)
         for line in result:
             if number - line.weight <= 0:
+                line.views += 1
+                line.save()
                 quote = line
                 break
             number -= line.weight
-        #quote = Quotes.objects.get(id=random.randint(1, count))
         context = {'quote': quote}
         return render(request, "index.html", context)
     else:
-        return HttpResponse("<p>Ничего нет</p>")
+        return render(request, "index_empty.html")
 
-def quote(request, id):
-    quote = Quotes.objects.get(id=id)
-    context = {'quote': quote}
-    return render(request, "quote.html", context)
+def form(request):
+    result = Quotes.objects.all()
+    context = {'quotes': result}
+    return render(request, "form.html", context)
 
 def edit(request, id):
     if request.method == "POST":
@@ -60,29 +49,6 @@ def edit(request, id):
         context = {'quote': quote}
         return render(request, "edit.html", context)
 
-
-def delete(request, id):
-    quote = Quotes.objects.get(id=id)
-    quote.delete()
-    quotes = Quotes.objects.all()
-    quotes_list = [model_to_dict(quote) for quote in quotes]
-    result = json.dumps(quotes_list, ensure_ascii=False)
-    return JsonResponse(result, safe=False)
-
-def form(request):
-    result = Quotes.objects.all()
-    context = {'quotes': result}
-    return render(request, "form.html", context)
-
-def quotesjson(request):
-    quotes = Quotes.objects.all()
-    quotes_list = [model_to_dict(quote) for quote in quotes]
-    result = json.dumps(quotes_list, ensure_ascii=False)
-    return JsonResponse(result, safe=False)
-
-def loadquotes(request):
-    return render(request, "loadquotes.html")
-
 def postquote(request):
     name = request.POST.get("name", "Undefined")
     source = request.POST.get("source", "Undefined")
@@ -99,6 +65,14 @@ def postquote(request):
         quotes_list = [model_to_dict(quote) for quote in quotes]
         result = json.dumps(quotes_list, ensure_ascii=False)
         return JsonResponse(result, safe=False)
+
+def delete(request, id):
+    quote = Quotes.objects.get(id=id)
+    quote.delete()
+    quotes = Quotes.objects.all()
+    quotes_list = [model_to_dict(quote) for quote in quotes]
+    result = json.dumps(quotes_list, ensure_ascii=False)
+    return JsonResponse(result, safe=False)
 
 def rate(request):
     quoteId = request.POST.get("quote", 1)
