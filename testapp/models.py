@@ -6,3 +6,4 @@ class Quotes(models.Model):
     weight = models.PositiveIntegerField()
     likes = models.PositiveIntegerField(default=0)
     dislikes = models.PositiveIntegerField(default=0)
+    views = models.PositiveIntegerField(default=0)
